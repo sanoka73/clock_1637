@@ -146,11 +146,61 @@ bool syncTimeFromNTP() {
   }
 }
 
+// Function to run boot animation (rotating circle)
+void bootAnimation() {
+  // Segment patterns for circle animation (rotating around the display)
+  // Segment mapping: A=0x01, B=0x02, C=0x04, D=0x08, E=0x10, F=0x20, G=0x40
+  const uint8_t circlePatterns[] = {
+    0b00000001,  // A - top
+    0b00000010,  // B - top-right
+    0b00000100,  // C - bottom-right
+    0b00001000,  // D - bottom
+    0b00010000,  // E - bottom-left
+    0b00100000   // F - top-left
+  };
+
+  const int numPatterns = 6;
+  const int cycles = 3;  // Number of complete rotations
+  const int delayMs = 80;  // Delay between animation frames
+
+  // Buffer to hold 4 digits (all showing the same pattern)
+  uint8_t buffer[4];
+
+  // Run the animation for specified cycles
+  for (int cycle = 0; cycle < cycles; cycle++) {
+    for (int i = 0; i < numPatterns; i++) {
+      // Fill buffer with the same pattern for all 4 digits
+      for (int digit = 0; digit < 4; digit++) {
+        buffer[digit] = circlePatterns[i];
+      }
+      display.displayRawBytes(buffer, 4);
+      delay(delayMs);
+    }
+  }
+
+  // Clear the display after animation
+  display.clearScreen();
+  delay(200);
+}
+
 // Function to display time on TM1637
 void displayTime(int hour, int minute, bool showColon) {
-  // Format: HHMM
-  int displayValue = hour * 100 + minute;
-  display.display(displayValue, true, showColon);
+  // Format: HHMM with leading zeros
+  String timeStr = "";
+  if (hour < 10) timeStr += "0";
+  timeStr += String(hour);
+  if (minute < 10) timeStr += "0";
+  timeStr += String(minute);
+
+  // Display the time
+  display.display(timeStr);
+
+  // Control the colon based on showColon parameter
+  if (showColon) {
+    display.colonOn();
+  } else {
+    display.colonOff();
+  }
 }
 
 void setup() {
@@ -171,6 +221,9 @@ void setup() {
   display.begin();
   display.setBrightness(7); // 0-7 brightness level
   display.clearScreen();
+
+  // Run boot animation
+  bootAnimation();
   
   // Initialize RTC
   if (!rtc.begin()) {
