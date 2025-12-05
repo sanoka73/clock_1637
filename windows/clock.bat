@@ -62,19 +62,26 @@ if %selected%==6 (
 )
 
 if %selected%==7 (
-    echo [94m^> [7] Exit[0m
+    echo [94m^> [7] Erase Flash[0m
 ) else (
-    echo   [7] Exit
+    echo   [7] Erase Flash
+)
+
+if %selected%==8 (
+    echo [94m^> [8] Exit[0m
+) else (
+    echo   [8] Exit
 )
 
 echo.
 
 REM Get user input
-choice /c 1234567wu /n /m ""
+choice /c 12345678wu /n /m ""
 
-if errorlevel 9 goto menu_down
-if errorlevel 8 goto menu_up
-if errorlevel 7 goto do_exit
+if errorlevel 10 goto menu_down
+if errorlevel 9 goto menu_up
+if errorlevel 8 goto do_exit
+if errorlevel 7 goto do_erase_flash
 if errorlevel 6 goto do_device_info
 if errorlevel 5 goto do_clean
 if errorlevel 4 goto do_run
@@ -86,12 +93,12 @@ goto menu
 
 :menu_up
 set /a selected-=1
-if %selected% lss 1 set selected=7
+if %selected% lss 1 set selected=8
 goto menu
 
 :menu_down
 set /a selected+=1
-if %selected% gtr 7 set selected=1
+if %selected% gtr 8 set selected=1
 goto menu
 
 :do_build
@@ -231,6 +238,42 @@ echo.
 echo Connected devices:
 echo.
 pio device list
+
+echo.
+pause
+goto menu
+
+:do_erase_flash
+cls
+echo ========================================
+echo    ESP8266 Clock - Erase Flash
+echo ========================================
+echo.
+echo [91m[1mWARNING: This will completely erase the flash memory![0m
+echo [93mAll data on the device will be lost.[0m
+echo.
+set /p confirm="Are you sure you want to continue? (y/N): "
+
+if /i not "%confirm%"=="y" (
+    echo.
+    echo [94mOperation cancelled.[0m
+    echo.
+    pause
+    goto menu
+)
+
+echo.
+echo Erasing flash memory...
+echo.
+pio run --target erase
+
+if %errorlevel% equ 0 (
+    echo.
+    echo [92mFlash erased successfully![0m
+) else (
+    echo.
+    echo [91mFlash erase failed![0m
+)
 
 echo.
 pause

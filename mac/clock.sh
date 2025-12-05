@@ -74,9 +74,15 @@ show_menu() {
     fi
 
     if [ $selected -eq 6 ]; then
-        echo -e "${GREEN}► [7] Exit${NC}"
+        echo -e "${GREEN}► [7] Erase Flash${NC}"
     else
-        echo -e "  [7] Exit"
+        echo -e "  [7] Erase Flash"
+    fi
+
+    if [ $selected -eq 7 ]; then
+        echo -e "${GREEN}► [8] Exit${NC}"
+    else
+        echo -e "  [8] Exit"
     fi
 
     echo ""
@@ -213,12 +219,48 @@ do_device_info() {
     read
 }
 
+# Erase flash
+do_erase_flash() {
+    show_header
+    echo -e "${RED}${BOLD}WARNING: This will completely erase the flash memory!${NC}"
+    echo -e "${YELLOW}All data on the device will be lost.${NC}"
+    echo ""
+    echo -e "${YELLOW}Are you sure you want to continue? (y/N): ${NC}"
+    read -r confirm
+
+    if [[ ! $confirm =~ ^[Yy]$ ]]; then
+        echo ""
+        echo -e "${BLUE}Operation cancelled.${NC}"
+        echo ""
+        echo -e "${YELLOW}Press Enter to continue...${NC}"
+        read
+        return
+    fi
+
+    echo ""
+    echo -e "${BLUE}Erasing flash memory...${NC}"
+    echo ""
+    pio run --target erase
+
+    if [ $? -eq 0 ]; then
+        echo ""
+        echo -e "${GREEN}✓ Flash erased successfully!${NC}"
+    else
+        echo ""
+        echo -e "${RED}✗ Flash erase failed!${NC}"
+    fi
+
+    echo ""
+    echo -e "${YELLOW}Press Enter to continue...${NC}"
+    read
+}
+
 # Main menu loop
 main() {
     check_pio
 
     local selected=0
-    local max_items=6
+    local max_items=7
 
     while true; do
         show_menu $selected
@@ -252,14 +294,15 @@ main() {
                 3) do_run ;;
                 4) do_clean ;;
                 5) do_device_info ;;
-                6)
+                6) do_erase_flash ;;
+                7)
                     show_header
                     echo -e "${GREEN}Goodbye!${NC}"
                     echo ""
                     exit 0
                     ;;
             esac
-        elif [[ $input =~ ^[1-7]$ ]]; then
+        elif [[ $input =~ ^[1-8]$ ]]; then
             # Number key pressed
             case $input in
                 1) do_build ;;
@@ -268,7 +311,8 @@ main() {
                 4) do_run ;;
                 5) do_clean ;;
                 6) do_device_info ;;
-                7)
+                7) do_erase_flash ;;
+                8)
                     show_header
                     echo -e "${GREEN}Goodbye!${NC}"
                     echo ""
